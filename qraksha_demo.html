@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>QRaksha — Scan Before You Scan</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<style>
+  :root{
+    --ink:#12141A;
+    --paper:#FAFAF8;
+    --paper-2:#F1F0EC;
+    --line:#E4E2DC;
+    --orange:#FF6E38;
+    --orange-deep:#E2551F;
+    --navy:#171B2E;
+    --safe:#1FA463;
+    --safe-bg:#E7F7EE;
+    --warn:#E8A33D;
+    --warn-bg:#FCF3E3;
+    --danger:#E23D3D;
+    --danger-bg:#FCEAEA;
+    --mono: 'JetBrains Mono', monospace;
+    --display: 'Sora', sans-serif;
+    --body: 'Inter', sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0; background:var(--paper); color:var(--ink); font-family:var(--body);
+    -webkit-font-smoothing:antialiased;
+  }
+  ::selection{ background:var(--orange); color:white; }
+
+  a{color:inherit;}
+  .wrap{max-width:1100px; margin:0 auto; padding:0 28px;}
+
+  /* ---------- NAV ---------- */
+  nav{
+    position:sticky; top:0; z-index:50; background:rgba(250,250,248,0.86); backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line);
+  }
+  nav .wrap{display:flex; align-items:center; justify-content:space-between; height:64px;}
+  .brand{display:flex; align-items:center; gap:10px; font-family:var(--display); font-weight:800; font-size:19px; letter-spacing:-0.01em;}
+  .brand .dot{width:9px;height:9px;border-radius:50%;background:var(--orange); box-shadow:0 0 0 4px rgba(255,110,56,0.18);}
+  .brand span.hi{color:var(--orange);}
+  .navlinks{display:flex; gap:28px; font-size:14px; font-weight:600; color:#555;}
+  .navlinks a{text-decoration:none; transition:color .15s;}
+  .navlinks a:hover{color:var(--ink);}
+
+  /* ---------- HERO ---------- */
+  header.hero{padding:78px 0 54px; position:relative; overflow:hidden;}
+  .hero-grid{display:grid; grid-template-columns:1.15fr 0.85fr; gap:48px; align-items:center;}
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:8px; font-family:var(--mono); font-size:12px; font-weight:600;
+    color:var(--orange-deep); background:#FFF0E8; border:1px solid #FFD9C4; padding:6px 12px; border-radius:100px; letter-spacing:.02em;
+  }
+  .eyebrow::before{content:''; width:6px; height:6px; border-radius:50%; background:var(--orange); animation:pulse 1.6s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;} 50%{opacity:.25;}}
+  h1.title{
+    font-family:var(--display); font-size:56px; line-height:1.03; letter-spacing:-0.025em; margin:20px 0 18px; font-weight:800;
+  }
+  h1.title em{font-style:normal; color:var(--orange); position:relative;}
+  .sub{font-size:17px; line-height:1.6; color:#4B4B52; max-width:520px; margin-bottom:30px;}
+  .cta-row{display:flex; gap:12px; flex-wrap:wrap;}
+  .btn{
+    font-family:var(--body); font-weight:700; font-size:14.5px; padding:13px 22px; border-radius:10px; border:none; cursor:pointer;
+    display:inline-flex; align-items:center; gap:8px; transition:transform .12s ease, box-shadow .12s ease;
+  }
+  .btn:active{transform:translateY(1px);}
+  .btn-primary{background:var(--ink); color:white;}
+  .btn-primary:hover{box-shadow:0 6px 18px rgba(18,20,26,0.25);}
+  .btn-ghost{background:transparent; color:var(--ink); border:1.5px solid var(--line);}
+  .btn-ghost:hover{border-color:var(--ink);}
+
+  .hero-visual{position:relative; display:flex; justify-content:center;}
+  .scan-frame{
+    width:100%; max-width:300px; aspect-ratio:1/1.18; background:var(--navy); border-radius:22px; position:relative;
+    box-shadow:0 30px 60px -20px rgba(23,27,46,0.5); overflow:hidden; padding:22px;
+  }
+  .scan-frame .corner{position:absolute; width:26px; height:26px; border-color:var(--orange); opacity:.9;}
+  .scan-frame .tl{top:16px; left:16px; border-top:3px solid; border-left:3px solid; border-radius:6px 0 0 0;}
+  .scan-frame .tr{top:16px; right:16px; border-top:3px solid; border-right:3px solid; border-radius:0 6px 0 0;}
+  .scan-frame .bl{bottom:16px; left:16px; border-bottom:3px solid; border-left:3px solid; border-radius:0 0 0 6px;}
+  .scan-frame .br{bottom:16px; right:16px; border-bottom:3px solid; border-right:3px solid; border-radius:0 0 6px 0;}
+  .laser{position:absolute; left:22px; right:22px; height:2px; background:linear-gradient(90deg,transparent,var(--orange),transparent); box-shadow:0 0 12px 2px var(--orange); animation:sweep 2.4s ease-in-out infinite;}
+  @keyframes sweep{0%,100%{top:20%;} 50%{top:78%;}}
+  .hero-qr{position:absolute; inset:0; display:flex; align-items:center; justify-content:center;}
+  .hero-qr img{width:66%; border-radius:8px; background:white; padding:8px;}
+  .hero-caption{margin-top:16px; text-align:center; font-family:var(--mono); font-size:12px; color:#9AA0B4;}
+
+  /* ---------- STAT STRIP ---------- */
+  .stats{border-top:1px solid var(--line); border-bottom:1px solid var(--line); background:var(--paper-2);}
+  .stats .wrap{display:grid; grid-template-columns:repeat(4,1fr); padding:26px 28px;}
+  .stat{text-align:left; padding-right:20px;}
+  .stat .n{font-family:var(--display); font-size:26px; font-weight:800; color:var(--ink);}
+  .stat .l{font-size:12.5px; color:#6B6B72; margin-top:2px;}
+
+  /* ---------- SECTION HEADERS ---------- */
+  section{padding:74px 0;}
+  .sec-head{max-width:640px; margin-bottom:40px;}
+  .sec-eyebrow{font-family:var(--mono); font-size:12px; font-weight:700; color:var(--orange-deep); letter-spacing:.06em; text-transform:uppercase;}
+  h2.sec-title{font-family:var(--display); font-size:32px; font-weight:800; letter-spacing:-0.02em; margin:10px 0 12px;}
+  .sec-desc{color:#55555C; font-size:15px; line-height:1.6;}
+
+  /* ---------- DEMO SECTION ---------- */
+  .demo-shell{
+    background:var(--navy); border-radius:22px; padding:32px; color:white;
+  }
+  .demo-cols{display:grid; grid-template-columns:340px 1fr; gap:28px; align-items:start;}
+  @media (max-width:860px){ .demo-cols{grid-template-columns:1fr;} }
+
+  .sample-label{font-family:var(--mono); font-size:11.5px; letter-spacing:.06em; text-transform:uppercase; color:#8990AC; margin-bottom:12px;}
+  .samples{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .sample-card{
+    background:#1E2337; border:1px solid #2B3050; border-radius:12px; padding:12px; cursor:pointer; text-align:center;
+    transition:border-color .15s, background .15s;
+  }
+  .sample-card:hover{border-color:var(--orange); background:#242A44;}
+  .sample-card.active{border-color:var(--orange); background:#242A44; box-shadow:0 0 0 1px var(--orange);}
+  .sample-card img{width:64px; height:64px; background:white; border-radius:6px; padding:5px;}
+  .sample-card .nm{font-size:11.5px; font-weight:600; margin-top:8px; color:#DADEEF; line-height:1.3;}
+
+  .upload-box{
+    margin-top:14px; border:1.5px dashed #3A4066; border-radius:12px; padding:16px; text-align:center; font-size:12px; color:#8990AC;
+    cursor:pointer;
+  }
+  .upload-box:hover{border-color:var(--orange); color:#DADEEF;}
+  .upload-box input{display:none;}
+
+  .terminal{
+    background:#0D0F1A; border:1px solid #262B47; border-radius:14px; padding:20px; min-height:210px;
+    font-family:var(--mono); font-size:13px; color:#9FE6B8;
+  }
+  .term-head{display:flex; gap:6px; margin-bottom:14px;}
+  .term-head span{width:10px; height:10px; border-radius:50%; background:#333952;}
+  .term-line{margin:4px 0; color:#7C8AAE; opacity:0; animation:fadein .3s forwards;}
+  .term-line b{color:#E8EAF5; font-weight:600;}
+  .term-line.ok{color:var(--safe);}
+  .term-line.bad{color:#FF6E6E;}
+  .term-line.warn{color:var(--warn);}
+  @keyframes fadein{ to{opacity:1;} }
+  .cursor{display:inline-block; width:7px; height:14px; background:var(--orange); vertical-align:middle; animation:blink 1s step-start infinite;}
+  @keyframes blink{50%{opacity:0;}}
+
+  .verdict{margin-top:18px; border-radius:14px; padding:20px; display:none;}
+  .verdict.show{display:block; animation:fadein .3s forwards;}
+  .verdict-top{display:flex; align-items:center; gap:14px;}
+  .badge{font-family:var(--display); font-weight:800; font-size:15px; padding:7px 16px; border-radius:100px; display:inline-block;}
+  .score-ring{width:52px; height:52px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:var(--mono); font-weight:700; font-size:14px; flex-shrink:0;}
+  .verdict-reasons{margin-top:14px; padding-left:0; list-style:none; font-size:13.5px; line-height:1.7; color:#3A3A40;}
+  .verdict-reasons li{padding-left:22px; position:relative; margin-bottom:4px;}
+  .verdict-reasons li::before{content:'—'; position:absolute; left:0; opacity:.5;}
+  .report-row{margin-top:16px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
+  .btn-sm{font-size:13px; padding:9px 16px; border-radius:8px;}
+
+  /* ---------- HOW IT WORKS ---------- */
+  .steps{display:grid; grid-template-columns:repeat(4,1fr); gap:16px;}
+  @media (max-width:860px){ .steps{grid-template-columns:1fr 1fr;} }
+  .step{background:white; border:1px solid var(--line); border-radius:14px; padding:20px;}
+  .step .k{font-family:var(--mono); font-size:11px; color:var(--orange-deep); font-weight:700;}
+  .step .t{font-family:var(--display); font-weight:700; font-size:15.5px; margin:8px 0 6px;}
+  .step .d{font-size:12.5px; color:#666; line-height:1.5;}
+
+  /* ---------- MAP ---------- */
+  .map-shell{border:1px solid var(--line); border-radius:18px; overflow:hidden; background:white;}
+  #map{height:380px; width:100%; filter:saturate(0.9);}
+  .map-legend{display:flex; gap:18px; padding:14px 20px; border-top:1px solid var(--line); font-size:12.5px; color:#555; flex-wrap:wrap;}
+  .map-legend .li{display:flex; align-items:center; gap:7px;}
+  .map-legend .sw{width:10px; height:10px; border-radius:50%;}
+
+  footer{border-top:1px solid var(--line); padding:36px 0; margin-top:20px;}
+  footer .wrap{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;}
+  footer .fbrand{font-family:var(--display); font-weight:800; font-size:15px;}
+  footer .fnote{font-size:12.5px; color:#8B8B92; max-width:480px; line-height:1.5;}
+
+  @media (max-width:860px){
+    .hero-grid{grid-template-columns:1fr;}
+    h1.title{font-size:38px;}
+    .stats .wrap{grid-template-columns:1fr 1fr; row-gap:18px;}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="brand"><span class="dot"></span>QR<span class="hi">aksha</span></div>
+    <div class="navlinks">
+      <a href="#demo">Live Demo</a>
+      <a href="#how">How it works</a>
+      <a href="#map">Community Map</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <span class="eyebrow">BUILD WITH भारत 2.0 · LIVE PROTOTYPE</span>
+      <h1 class="title">Scan before<br>you <em>scan</em>.</h1>
+      <p class="sub">QRaksha decodes a QR code's real destination and checks it for phishing risk — before you ever open it. Built for the format every other anti-phishing tool ignores.</p>
+      <div class="cta-row">
+        <button class="btn btn-primary" onclick="document.getElementById('demo').scrollIntoView()">Try the live demo ↓</button>
+        <button class="btn btn-ghost" onclick="document.getElementById('how').scrollIntoView()">How it works</button>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div>
+        <div class="scan-frame">
+          <div class="corner tl"></div><div class="corner tr"></div><div class="corner bl"></div><div class="corner br"></div>
+          <div class="laser"></div>
+          <div class="hero-qr"><img id="heroQr" alt="sample qr"></div>
+        </div>
+        <div class="hero-caption">payload hidden until decoded →</div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<div class="stats">
+  <div class="wrap">
+    <div class="stat"><div class="n">4</div><div class="l">risk-signal layers checked per scan</div></div>
+    <div class="stat"><div class="n">&lt;2s</div><div class="l">scan-to-verdict time</div></div>
+    <div class="stat"><div class="n">0</div><div class="l">clicks before the risk is shown</div></div>
+    <div class="stat"><div class="n">100%</div><div class="l">on-device decode, nothing opens blind</div></div>
+  </div>
+</div>
+
+<section id="demo">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="sec-eyebrow">Try it yourself</div>
+      <h2 class="sec-title">Pick a sample QR, or upload your own</h2>
+      <p class="sec-desc">These four samples mirror real quishing patterns spotted in India — a fake payment QR, a spoofed fine, a rogue WiFi network, and a shortened link hiding its true destination. Everything below runs live in your browser.</p>
+    </div>
+
+    <div class="demo-shell">
+      <div class="demo-cols">
+        <div>
+          <div class="sample-label">Sample QR codes</div>
+          <div class="samples" id="sampleGrid"></div>
+
+          <div class="sample-label" style="margin-top:20px;">Or scan your own</div>
+          <label class="upload-box">
+            <input type="file" id="fileInput" accept="image/*">
+            📷 Upload a QR image
+          </label>
+        </div>
+
+        <div>
+          <div class="terminal" id="terminal">
+            <div class="term-head"><span></span><span></span><span></span></div>
+            <div id="termBody" style="color:#5B6488;">Select a QR code to begin scanning<span class="cursor"></span></div>
+          </div>
+
+          <div class="verdict" id="verdict">
+            <div class="verdict-top">
+              <div class="score-ring" id="scoreRing">--</div>
+              <div>
+                <div class="badge" id="badge">—</div>
+                <div style="font-family:var(--mono); font-size:11.5px; color:#7A7A82; margin-top:4px;" id="payloadLine"></div>
+              </div>
+            </div>
+            <ul class="verdict-reasons" id="reasons"></ul>
+            <div class="report-row">
+              <button class="btn btn-primary btn-sm" id="reportBtn">📍 Report this QR's location</button>
+              <span id="reportMsg" style="font-size:12.5px; color:#1FA463; font-weight:600;"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="how">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="sec-eyebrow">Under the hood</div>
+      <h2 class="sec-title">Four checks run on every scan</h2>
+      <p class="sec-desc">The demo above runs simplified versions of these checks entirely client-side. In production, domain and redirect checks call live threat-intel APIs.</p>
+    </div>
+    <div class="steps">
+      <div class="step"><div class="k">01 · DECODE</div><div class="t">Read the payload</div><div class="d">URL, UPI string, or WiFi config is extracted before anything is opened or connected to.</div></div>
+      <div class="step"><div class="k">02 · INSPECT</div><div class="t">Domain &amp; redirect check</div><div class="d">Typosquat distance against known brands, shortened-link detection, urgency-keyword scan.</div></div>
+      <div class="step"><div class="k">03 · CROSS-CHECK</div><div class="t">UPI &amp; WiFi rules</div><div class="d">Payee VPA pattern checks, open-network warnings for WiFi QRs.</div></div>
+      <div class="step"><div class="k">04 · EXPLAIN</div><div class="t">Plain-language verdict</div><div class="d">Safe / Caution / Danger with the exact reason — no jargon required to act on it.</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="map">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="sec-eyebrow">Physical-world crowdsourcing</div>
+      <h2 class="sec-title">Reported quishing hotspots</h2>
+      <p class="sec-desc">When someone reports a malicious QR, its location is pinned here — warning others nearby before they scan the same code. Try the "Report this QR" button above to add your own pin.</p>
+    </div>
+    <div class="map-shell">
+      <div id="map"></div>
+      <div class="map-legend">
+        <div class="li"><span class="sw" style="background:#E23D3D;"></span> Reported malicious QR</div>
+        <div class="li"><span class="sw" style="background:#FF6E38;"></span> Your report (this session)</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="fbrand">QR<span style="color:var(--orange);">aksha</span></div>
+    <div class="fnote">Prototype built for Build with Bharat 2.0. Detection rules here are simplified for demo purposes — the pitch deck covers the full production architecture (WHOIS, redirect-chain resolution, LLM-based explanation).</div>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsqr/1.4.0/jsQR.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+/* ---------------- SAMPLE DATA ---------------- */
+const SAMPLES = [
+  { id:'safe',   name:'Local Shop — UPI Payment', payload:'upi://pay?pa=meera.stores@okhdfc&pn=Meera%20General%20Store&am=250&cu=INR', type:'upi' },
+  { id:'fine',   name:'"Traffic Challan" Poster', payload:'https://paytm-refund-challan.in/pay?ref=DL9920', type:'url' },
+  { id:'wifi',   name:'Cafe "Free WiFi"', payload:'WIFI:T:WPA;S:Cafe_Free_5G_Guest;P:welcome123;;', type:'wifi' },
+  { id:'courier',name:'Courier "KYC Update" Slip', payload:'http://bit.ly/3xKyc-Verify9', type:'url' },
+];
+const KNOWN_BRANDS = ['paytm.com','phonepe.com','amazon.in','flipkart.com','irctc.co.in','indiapost.gov.in','sbi.co.in','icicibank.com'];
+const SHORTENERS = ['bit.ly','tinyurl.com','cutt.ly','is.gd','t.co','rebrand.ly'];
+const URGENCY_WORDS = ['refund','verify','kyc','block','urgent','suspend','fine','challan','expire','claim','prize'];
+const KNOWN_VPA_SUFFIX = ['okhdfc','oksbi','okicici','okaxis','ybl','paytm','ibl'];
+
+function levenshtein(a,b){
+  const m=a.length,n=b.length; const d=Array.from({length:m+1},(_,i)=>[i,...Array(n).fill(0)]);
+  for(let j=0;j<=n;j++) d[0][j]=j;
+  for(let i=1;i<=m;i++) for(let j=1;j<=n;j++){
+    d[i][j]=Math.min(d[i-1][j]+1, d[i][j-1]+1, d[i-1][j-1]+(a[i-1]===b[j-1]?0:1));
+  }
+  return d[m][n];
+}
+
+function analyze(payload){
+  const reasons=[]; let score=8; let type='url';
+  if(payload.startsWith('upi://')){
+    type='upi';
+    const params = new URLSearchParams(payload.split('?')[1]||'');
+    const pa = params.get('pa')||''; const pn = params.get('pn')||'';
+    const suffix = pa.split('@')[1]||'';
+    if(KNOWN_VPA_SUFFIX.includes(suffix)){ reasons.push(`Payee handle "@${suffix}" matches a recognised UPI bank suffix.`); score+=2; }
+    else { reasons.push(`Payee handle "@${suffix}" is not in the recognised bank-suffix list — verify before paying.`); score+=35; }
+    reasons.push(`Payee name reads as "${decodeURIComponent(pn)}" — confirm this matches who you intend to pay.`);
+  } else if(payload.startsWith('WIFI:')){
+    type='wifi';
+    const ssidMatch = payload.match(/S:([^;]*);/); const ssid = ssidMatch? ssidMatch[1] : 'unknown';
+    const openNet = /T:nopass/i.test(payload);
+    reasons.push(`Network "${ssid}" requested via QR auto-connect.`);
+    if(openNet){ reasons.push('Open network with no password — traffic can be intercepted by anyone nearby.'); score+=55; }
+    else { reasons.push('Password-protected, but public WiFi QRs can still be swapped by an attacker — connect only if the source is trusted.'); score+=30; }
+  } else {
+    type='url';
+    let domain='';
+    try{ domain = new URL(payload).hostname.replace('www.',''); }catch(e){ domain = payload; }
+    const shortened = SHORTENERS.some(s=>domain.includes(s));
+    if(shortened){
+      reasons.push(`"${domain}" is a link shortener — the real destination is hidden behind a redirect.`);
+      score+=40;
+    } else {
+      let minDist = 99, closest='';
+      KNOWN_BRANDS.forEach(b=>{ const d=levenshtein(domain,b); if(d<minDist){minDist=d; closest=b;} });
+      if(minDist>0 && minDist<=4 && domain!==closest){
+        reasons.push(`"${domain}" closely resembles "${closest}" (edit distance ${minDist}) — likely typosquatting.`);
+        score+=45;
+      } else if(minDist===0){
+        reasons.push(`"${domain}" matches a recognised, verified domain.`);
+        score+=2;
+      } else {
+        reasons.push(`"${domain}" does not match any known-brand pattern in this demo's watchlist.`);
+        score+=10;
+      }
+    }
+    const urgencyHit = URGENCY_WORDS.filter(w=>payload.toLowerCase().includes(w));
+    if(urgencyHit.length){
+      reasons.push(`Urgency language detected in the link ("${urgencyHit[0]}") — a common pressure tactic.`);
+      score+=15;
+    }
+  }
+  score = Math.max(2, Math.min(98, score));
+  let verdict, color, bg;
+  if(score<30){ verdict='SAFE'; color='#1FA463'; bg='#E7F7EE'; }
+  else if(score<65){ verdict='CAUTION'; color='#E8A33D'; bg='#FCF3E3'; }
+  else { verdict='DANGER'; color='#E23D3D'; bg='#FCEAEA'; }
+  return { type, reasons, score, verdict, color, bg };
+}
+
+/* ---------------- RENDER SAMPLE QR IMAGES ---------------- */
+const sampleGrid = document.getElementById('sampleGrid');
+const qrCache = {};
+SAMPLES.forEach(s=>{
+  const holder = document.createElement('div');
+  new QRCode(holder, { text:s.payload, width:200, height:200, correctLevel:QRCode.CorrectLevel.M });
+  setTimeout(()=>{
+    const imgEl = holder.querySelector('img') || holder.querySelector('canvas');
+    let src = imgEl.tagName==='CANVAS' ? imgEl.toDataURL() : imgEl.src;
+    qrCache[s.id]=src;
+    const card = document.createElement('div');
+    card.className='sample-card';
+    card.dataset.id=s.id;
+    card.innerHTML = `<img src="${src}" alt="${s.name}"><div class="nm">${s.name}</div>`;
+    card.onclick=()=>runScan(s.id);
+    sampleGrid.appendChild(card);
+    if(s.id==='fine'){ document.getElementById('heroQr').src = src; }
+  }, 60);
+});
+
+/* ---------------- TERMINAL TYPING ---------------- */
+const termBody = document.getElementById('termBody');
+function typeLines(lines, done){
+  termBody.innerHTML='';
+  let i=0;
+  function next(){
+    if(i>=lines.length){ done && done(); return; }
+    const div = document.createElement('div');
+    div.className = 'term-line ' + (lines[i].cls||'');
+    div.innerHTML = lines[i].text;
+    termBody.appendChild(div);
+    i++;
+    setTimeout(next, 280);
+  }
+  next();
+}
+
+let currentLocationOffset = 0;
+function runScan(sampleId, decodedText){
+  document.querySelectorAll('.sample-card').forEach(c=>c.classList.toggle('active', c.dataset.id===sampleId));
+  const sample = SAMPLES.find(s=>s.id===sampleId);
+  const payload = decodedText || sample.payload;
+  document.getElementById('verdict').classList.remove('show');
+
+  const lines = [
+    { text:`<b>&gt; decoding QR payload...</b>` },
+    { text:`payload type: ${payload.startsWith('upi://')?'UPI_PAY':payload.startsWith('WIFI:')?'WIFI_CONFIG':'URL'}` },
+    { text:`raw: ${payload.length>54?payload.slice(0,54)+'…':payload}` },
+    { text:`<b>&gt; running risk checks...</b>` },
+    { text:`[1/4] domain / redirect check` , cls:'warn'},
+    { text:`[2/4] typosquat distance scan` , cls:'warn'},
+    { text:`[3/4] UPI / WiFi rule match` , cls:'warn'},
+    { text:`[4/4] compiling verdict...` , cls:'warn'},
+  ];
+  typeLines(lines, ()=>{
+    const result = analyze(payload);
+    showVerdict(result, payload);
+  });
+}
+
+function showVerdict(result, payload){
+  const v = document.getElementById('verdict');
+  const ring = document.getElementById('scoreRing');
+  const badge = document.getElementById('badge');
+  const reasons = document.getElementById('reasons');
+  ring.style.background = result.bg;
+  ring.style.color = result.color;
+  ring.style.border = `2px solid ${result.color}`;
+  ring.textContent = result.score;
+  badge.style.background = result.bg;
+  badge.style.color = result.color;
+  badge.textContent = result.verdict;
+  document.getElementById('payloadLine').textContent = payload.length>60? payload.slice(0,60)+'…' : payload;
+  reasons.innerHTML='';
+  result.reasons.forEach(r=>{
+    const li=document.createElement('li'); li.textContent=r; reasons.appendChild(li);
+  });
+  document.getElementById('reportMsg').textContent='';
+  v.classList.add('show');
+  window.__lastResult = result;
+}
+
+/* ---------------- FILE UPLOAD DECODE ---------------- */
+document.getElementById('fileInput').addEventListener('change', function(e){
+  const file = e.target.files[0]; if(!file) return;
+  const img = new Image();
+  const reader = new FileReader();
+  reader.onload = function(evt){
+    img.onload = function(){
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width; canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img,0,0);
+      const imageData = ctx.getImageData(0,0,canvas.width,canvas.height);
+      const code = jsQR(imageData.data, canvas.width, canvas.height);
+      document.querySelectorAll('.sample-card').forEach(c=>c.classList.remove('active'));
+      if(code){
+        runScan('upload', code.data);
+      } else {
+        typeLines([{text:'<b>&gt; decoding QR payload...</b>'},{text:'No QR code detected in this image.', cls:'bad'}]);
+        document.getElementById('verdict').classList.remove('show');
+      }
+    };
+    img.src = evt.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+
+/* ---------------- MAP ---------------- */
+const map = L.map('map', { scrollWheelZoom:false }).setView([28.6139, 77.2295], 11.4);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution:'&copy; OpenStreetMap contributors', maxZoom:18
+}).addTo(map);
+
+const redIcon = L.divIcon({ className:'', html:'<div style="width:14px;height:14px;border-radius:50%;background:#E23D3D;border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.35);"></div>', iconSize:[14,14] });
+const orangeIcon = L.divIcon({ className:'', html:'<div style="width:16px;height:16px;border-radius:50%;background:#FF6E38;border:2px solid white;box-shadow:0 1px 4px rgba(0,0,0,0.35);"></div>', iconSize:[16,16] });
+
+const seeded = [
+  { lat:28.5921, lng:77.2062, label:'Fake UPI QR pasted over a shop counter QR — Munirka market' },
+  { lat:28.6315, lng:77.2167, label:'Spoofed "challan payment" poster near a paid-parking zone — Connaught Place' },
+  { lat:28.6507, lng:77.1909, label:'Rogue "Free WiFi" QR on a table tent — Karol Bagh food street' },
+];
+seeded.forEach(p=>{
+  L.marker([p.lat,p.lng], {icon:redIcon}).addTo(map).bindPopup(`<b style="font-family:sans-serif;">Reported quishing QR</b><br><span style="font-size:12.5px;">${p.label}</span>`);
+});
+
+document.getElementById('reportBtn').addEventListener('click', function(){
+  const r = window.__lastResult;
+  const lat = 28.6139 + (Math.random()-0.5)*0.09;
+  const lng = 77.2295 + (Math.random()-0.5)*0.09;
+  L.marker([lat,lng], {icon:orangeIcon}).addTo(map).bindPopup(`<b style="font-family:sans-serif;">Your report</b><br><span style="font-size:12.5px;">Verdict: ${r?r.verdict:'—'} · flagged this session</span>`).openPopup();
+  map.panTo([lat,lng]);
+  document.getElementById('reportMsg').textContent = '✓ Pinned to the community map below';
+});
+</script>
+</body>
+</html>
