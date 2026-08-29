@@ -10,7 +10,6 @@ Built for **Build with Bharat 2.0**, National Level Hackathon (NIT Delhi).
 ---
 
 ## The Problem
-
 QR codes are now the default "click" of everyday India — UPI payments, parking, WiFi, menus, delivery slips. But unlike a web link, a QR code hides its destination until *after* you've already scanned it. Attackers exploit this blind spot through **quishing**.
 
 Existing anti-phishing tools (email scanners, browser link-checkers, SMS filters) all assume you already have a visible, clickable URL. **None of them are built QR-first** — leaving one of the fastest-growing scam vectors almost completely unguarded.
