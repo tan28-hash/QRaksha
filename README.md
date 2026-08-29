@@ -4,9 +4,9 @@
 
 Built for **Build with Bharat 2.0**, National Level Hackathon (NIT Delhi).
 
-🔗 **Live Demo:** [add your hosted/demo link here]
-📽️ **Video Walkthrough:** [add if available]
-📊 **Pitch Deck:** [add link if hosted, e.g. Google Drive/Canva]
+🔗 **Live Demo:** https://fastidious-starburst-2f2fe9.netlify.app/#how
+
+
 
 ---
 
@@ -88,17 +88,16 @@ The current prototype (`/demo`) is a single-file, client-side implementation tha
 
 | Name | Role |
 |---|---|
-| [Member 1] | [Role] |
-| [Member 2] | [Role] |
-| [Member 3] | [Role] |
-| [Member 4] | [Role] |
+| Tanisha Dutta | Detection and Intelligence |
+|Bhavya| Product and experience |
 
-**College:** National Institute of Technology, Delhi
+
+**College:** SRMIST Ghaziabad,KIET Ghaziabad
 
 ## Running Locally
 
 ```bash
-git clone https://github.com/[your-username]/qraksha.git
+git clone https://github.com/tan28-hash/qraksha.git
 cd qraksha
 # open demo/index.html directly in a browser — no build step required
 ```
