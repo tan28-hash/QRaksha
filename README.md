@@ -4,9 +4,9 @@
 
 Built for **Build with Bharat 2.0**, National Level Hackathon (NIT Delhi).
 
-🔗 **Live Demo:** https://fastidious-starburst-2f2fe9.netlify.app/#how
-
-
+🔗 **Live Demo:** [add your hosted/demo link here]
+📽️ **Video Walkthrough:** [add if available]
+📊 **Pitch Deck:** [add link if hosted, e.g. Google Drive/Canva]
 
 ---
 
@@ -17,6 +17,7 @@ QR codes are now the default "click" of everyday India — UPI payments, parking
 Existing anti-phishing tools (email scanners, browser link-checkers, SMS filters) all assume you already have a visible, clickable URL. **None of them are built QR-first** — leaving one of the fastest-growing scam vectors almost completely unguarded.
 
 Real-world patterns this targets:
+
 - Fake UPI payment QRs pasted over genuine merchant stickers
 - Spoofed "parking fine" / challan QR posters
 - Fake courier/KYC QR codes on printed slips
@@ -31,10 +32,7 @@ QRaksha is a three-part safety layer:
 3. **Protect the Community** — Users tag the physical location of a malicious QR. Nearby users are warned before they scan the same code, turning individual scans into a shared, crowdsourced shield.
 
 ## How It Works
-
-```
 Scan / Upload → Decode → Multi-Layer Analysis → AI Explanation → Verdict + Action → Community Map Update
-```
 
 | Step | What happens |
 |---|---|
@@ -67,7 +65,7 @@ Scan / Upload → Decode → Multi-Layer Analysis → AI Explanation → Verdict
 
 ## Demo Prototype
 
-The current prototype (`/demo`) is a single-file, client-side implementation that demonstrates the full pipeline without needing a backend:
+The current prototype (`qraksha_demo.html`) is a single-file, client-side implementation that demonstrates the full pipeline without needing a backend:
 
 - Real QR decoding via `jsQR`
 - Heuristic risk engine: typosquat distance checks, link-shortener detection, UPI VPA validation, WiFi open-network warnings
@@ -88,20 +86,15 @@ The current prototype (`/demo`) is a single-file, client-side implementation tha
 
 | Name | Role |
 |---|---|
-| Tanisha Dutta | Detection and Intelligence |
-|Bhavya| Product and experience |
+| Tanisha Dutta | Detection & Intelligence — risk-analysis engine, redirect-chain tracing, typosquat detection, UPI VPA flagging, LLM explanation layer |
+| Bhavya | Product & Experience — live camera scanning UI, risk-score display, crowdsourced "report a malicious QR" map |
 
-
-**College:** SRMIST Ghaziabad,KIET Ghaziabad
+**College:** National Institute of Technology, Delhi
 
 ## Running Locally
-
-```bash
-git clone https://github.com/tan28-hash/qraksha.git
-cd qraksha
-# open demo/index.html directly in a browser — no build step required
-```
+git clone https://github.com/tan28-hash/QRaksha.git
+cd QRaksha
 
 ## License
 
-MIT — see [LICENSE](LICENSE) for details.
+MIT — see [LICENSE](https://github.com/tan28-hash/QRaksha/blob/main/LICENSE) for details.
