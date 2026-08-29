@@ -4,9 +4,8 @@
 
 Built for **Build with Bharat 2.0**, National Level Hackathon (NIT Delhi).
 
-🔗 **Live Demo:** [add your hosted/demo link here]
-📽️ **Video Walkthrough:** [add if available]
-📊 **Pitch Deck:** [add link if hosted, e.g. Google Drive/Canva]
+🔗 **Live Demo:** https://fastidious-starburst-2f2fe9.netlify.app/#how
+
 
 ---
 
